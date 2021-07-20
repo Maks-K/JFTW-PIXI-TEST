@@ -1,10 +1,10 @@
 import * as PIXI from "pixi.js";
 import "./style.css";
 import Assets from "./assets";
-import { Sprite } from "pixi.js";
+import { Game } from "./game/game";
+import { config } from "./config/config";
 
-const gameWidth = 1136;
-const gameHeight = 640;
+const { gameWidth, gameHeight } = config.gameAreaSize;
 
 const app = new PIXI.Application({
     backgroundColor: 0xd3d3d3,
@@ -15,16 +15,14 @@ const app = new PIXI.Application({
 const stage = app.stage;
 
 window.onload = async (): Promise<void> => {
-    const loader = await loadGameAssets();
+    await loadGameAssets();
 
     document.body.appendChild(app.view);
 
     resizeCanvas();
 
-    const backgroundTexture = loader.resources["background"].texture;
-    const backgroundSprite = new Sprite(backgroundTexture);
-
-    stage.addChild(backgroundSprite);
+    const game = new Game(stage);
+    game.start();
 };
 
 async function loadGameAssets(): Promise<PIXI.Loader> {
@@ -49,9 +47,14 @@ async function loadGameAssets(): Promise<PIXI.Loader> {
 
 function resizeCanvas(): void {
     const resize = () => {
-        app.renderer.resize(window.innerWidth, window.innerHeight);
-        app.stage.scale.x = window.innerWidth / gameWidth;
-        app.stage.scale.y = window.innerHeight / gameHeight;
+        const canvas = app.view;
+        //Figure out the scale amount on each axis
+        const scaleX = window.innerWidth / canvas.offsetWidth;
+        const scaleY = window.innerHeight / canvas.offsetHeight;
+
+        //Scale the canvas based on whichever value is less: `scaleX` or `scaleY`
+        const scale = Math.min(scaleX, scaleY);
+        canvas.style.transform = "scale(" + scale + ")";
     };
 
     resize();
